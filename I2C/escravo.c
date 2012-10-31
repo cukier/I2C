@@ -12,16 +12,17 @@
 #fuses	NOWRTD,NOEBTR,NOEBTRB
 
 #use delay(clock=32MHz, crystal=8MHz)
-#use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1)
+#use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=N, stop=1)
 #use i2c(slave, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw, address=0xB0)
 
-static int primeiraLeitura, segundaLeitura, terceiraLeitura, print;
+static int primeiraLeitura, segundaLeitura, terceiraLeitura, print, cont,
+		estado, lido;
 
 #int_ssp
 void ssp_interrupt() {
 
-	register int lido = 0;
-	register int estado = i2c_isr_state();
+	estado = i2c_isr_state();
+	lido = 0;
 
 	if (estado < 0x80) {
 		lido = i2c_read();
@@ -43,17 +44,20 @@ int main(void) {
 	enable_interrupts(INT_SSP);
 	enable_interrupts(GLOBAL);
 	while (true) {
+		printf("\fPronto...");
+		cont = 0;
 		switch (print) {
 		case 3:
-			printf("\t\t\t%d", terceiraLeitura);
+			printf("\n\rTerceira Leitrua: 0x%X", terceiraLeitura);
 		case 2:
-			printf("\t%d", segundaLeitura);
+			printf("\n\rSegunda Leitura:  0x%X", segundaLeitura);
 		case 1:
-			printf("%d", primeiraLeitura);
+			printf("\n\rPrimeira Leitura: 0x%X", primeiraLeitura);
 		default:
 			print = 0;
 			break;
 		}
+		delay_ms(1500);
 	}
 	return 0;
 }

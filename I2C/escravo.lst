@@ -1,15 +1,15 @@
-CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:55
+CCS PCH C Compiler, Version 4.124, 5967               31-out-12 18:34
 
                Filename: C:\Users\cuki\Eletronica\Projetos\I2CGit\I2C\escravo.lst
 
-               ROM used: 684 bytes (2%)
-                         Largest free fragment is 32080
-               RAM used: 30 (2%) at main() level
-                         41 (3%) worst case
-               Stack:    3 worst case (2 in main + 1 for interrupts)
+               ROM used: 720 bytes (2%)
+                         Largest free fragment is 32044
+               RAM used: 34 (2%) at main() level
+                         36 (2%) worst case
+               Stack:    2 worst case (1 in main + 1 for interrupts)
 
 *
-0000:  GOTO   0222
+0000:  GOTO   0214
 *
 0008:  MOVWF  04
 000A:  MOVFF  FD8,05
@@ -74,47 +74,49 @@ CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:55
 .................... #fuses	NOWRTD,NOEBTR,NOEBTRB 
 ....................  
 .................... #use delay(clock=32MHz, crystal=8MHz) 
-.................... #use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1) 
-*
-010C:  MOVLW  08
-010E:  MOVWF  01
-0110:  CLRF   25
-0112:  MOVFF  24,00
-0116:  MOVF   00,W
-0118:  XORWF  25,F
-011A:  RRCF   00,F
-011C:  DECFSZ 01,F
-011E:  BRA    0116
-0120:  BTFSS  F9E.4
-0122:  BRA    0120
-0124:  MOVLW  FE
-0126:  ANDWF  FAC,F
-0128:  BTFSC  25.0
-012A:  BSF    FAC.0
-012C:  MOVFF  24,FAD
-0130:  RETURN 0
+01EC:  CLRF   FEA
+01EE:  MOVLW  22
+01F0:  MOVWF  FE9
+01F2:  MOVF   FEF,W
+01F4:  BZ    0210
+01F6:  MOVLW  0A
+01F8:  MOVWF  01
+01FA:  CLRF   00
+01FC:  DECFSZ 00,F
+01FE:  BRA    01FC
+0200:  DECFSZ 01,F
+0202:  BRA    01FA
+0204:  MOVLW  5F
+0206:  MOVWF  00
+0208:  DECFSZ 00,F
+020A:  BRA    0208
+020C:  DECFSZ FEF,F
+020E:  BRA    01F6
+0210:  GOTO   02C8 (RETURN)
+.................... #use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=N, stop=1) 
 .................... #use i2c(slave, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw, address=0xB0) 
 ....................  
-.................... static int primeiraLeitura, segundaLeitura, terceiraLeitura, print; 
+.................... static int primeiraLeitura, segundaLeitura, terceiraLeitura, print, cont, 
+.................... 		estado, lido; 
 ....................  
 .................... #int_ssp 
 .................... void ssp_interrupt() { 
-*
-00AE:  CLRF   27
-00B0:  BTFSC  FC7.5
-00B2:  BRA    00BA
-00B4:  CLRF   1D
-00B6:  BTFSC  FC7.2
-00B8:  BSF    1D.7
-00BA:  MOVF   1D,W
-00BC:  INCF   1D,F
-00BE:  MOVWF  28
 ....................  
-.................... 	register int lido = 0; 
-.................... 	register int estado = i2c_isr_state(); 
+.................... 	estado = i2c_isr_state(); 
+*
+00AE:  BTFSC  FC7.5
+00B0:  BRA    00B8
+00B2:  CLRF   20
+00B4:  BTFSC  FC7.2
+00B6:  BSF    20.7
+00B8:  MOVF   20,W
+00BA:  INCF   20,F
+00BC:  MOVWF  1E
+.................... 	lido = 0; 
+00BE:  CLRF   1F
 ....................  
 .................... 	if (estado < 0x80) { 
-00C0:  MOVF   28,W
+00C0:  MOVF   1E,W
 00C2:  SUBLW  7F
 00C4:  BNC   0100
 .................... 		lido = i2c_read(); 
@@ -123,39 +125,39 @@ CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:55
 00CA:  BRA    00C8
 00CC:  MOVF   FC9,W
 00CE:  BSF    FC6.4
-00D0:  MOVWF  27
+00D0:  MOVWF  1F
 .................... 		if (estado == 1) { //primeira leitura 
-00D2:  DECFSZ 28,W
+00D2:  DECFSZ 1E,W
 00D4:  BRA    00E0
 .................... 			primeiraLeitura = lido; 
-00D6:  MOVFF  27,19
+00D6:  MOVFF  1F,19
 .................... 			print = 1; 
 00DA:  MOVLW  01
 00DC:  MOVWF  1C
 .................... 		} else if (estado == 2) { //segunda leitura 
 00DE:  BRA    00FE
-00E0:  MOVF   28,W
+00E0:  MOVF   1E,W
 00E2:  SUBLW  02
 00E4:  BNZ   00F0
 .................... 			segundaLeitura = lido; 
-00E6:  MOVFF  27,1A
+00E6:  MOVFF  1F,1A
 .................... 			print = 2; 
 00EA:  MOVLW  02
 00EC:  MOVWF  1C
 .................... 		} else if (estado == 3) { //terceira leitura 
 00EE:  BRA    00FE
-00F0:  MOVF   28,W
+00F0:  MOVF   1E,W
 00F2:  SUBLW  03
 00F4:  BNZ   00FE
 .................... 			terceiraLeitura = lido; 
-00F6:  MOVFF  27,1B
+00F6:  MOVFF  1F,1B
 .................... 			print = 3; 
 00FA:  MOVLW  03
 00FC:  MOVWF  1C
 .................... 		} 
 .................... 	} else if (estado == 0x80) { 
 00FE:  BRA    0106
-0100:  MOVF   28,W
+0100:  MOVF   1E,W
 0102:  SUBLW  80
 0104:  BNZ   0106
 .................... 	} 
@@ -165,91 +167,119 @@ CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:55
 0108:  GOTO   0060
 .................... int main(void) { 
 *
-0222:  CLRF   FF8
-0224:  BCF    FD0.7
-0226:  BSF    07.7
-0228:  CLRF   FEA
-022A:  CLRF   FE9
-022C:  MOVLW  33
-022E:  MOVWF  FAF
-0230:  MOVLW  E2
-0232:  MOVWF  FAC
-0234:  MOVLW  D0
-0236:  MOVWF  FAB
-0238:  BSF    F94.3
-023A:  BSF    F94.4
-023C:  MOVLW  B0
-023E:  MOVWF  FC8
-0240:  MOVLW  36
-0242:  MOVWF  FC6
-0244:  MOVLW  03
-0246:  MOVWF  1D
-0248:  BSF    FC1.0
-024A:  BSF    FC1.1
-024C:  BSF    FC1.2
-024E:  BCF    FC1.3
-0250:  CLRF   19
-0252:  CLRF   1A
-0254:  CLRF   1B
-0256:  CLRF   1C
+0214:  CLRF   FF8
+0216:  BCF    FD0.7
+0218:  BSF    07.7
+021A:  CLRF   FEA
+021C:  CLRF   FE9
+021E:  MOVLW  33
+0220:  MOVWF  FAF
+0222:  MOVLW  A2
+0224:  MOVWF  FAC
+0226:  MOVLW  90
+0228:  MOVWF  FAB
+022A:  BSF    F94.3
+022C:  BSF    F94.4
+022E:  MOVLW  B0
+0230:  MOVWF  FC8
+0232:  MOVLW  36
+0234:  MOVWF  FC6
+0236:  MOVLW  03
+0238:  MOVWF  20
+023A:  BSF    FC1.0
+023C:  BSF    FC1.1
+023E:  BSF    FC1.2
+0240:  BCF    FC1.3
+0242:  CLRF   19
+0244:  CLRF   1A
+0246:  CLRF   1B
+0248:  CLRF   1C
+024A:  CLRF   1D
+024C:  CLRF   1E
+024E:  CLRF   1F
 .................... 	enable_interrupts(INT_SSP); 
-0258:  BSF    F9D.3
+0250:  BSF    F9D.3
 .................... 	enable_interrupts(GLOBAL); 
-025A:  MOVLW  C0
-025C:  IORWF  FF2,F
+0252:  MOVLW  C0
+0254:  IORWF  FF2,F
 .................... 	while (true) { 
+.................... 		printf("\fPronto..."); 
+0256:  MOVLW  0C
+0258:  MOVWF  FF6
+025A:  MOVLW  01
+025C:  MOVWF  FF7
+025E:  BRA    0166
+.................... 		cont = 0; 
+0260:  CLRF   1D
 .................... 		switch (print) { 
-025E:  MOVF   1C,W
-0260:  XORLW  03
-0262:  BZ    026E
-0264:  XORLW  01
-0266:  BZ    028A
-0268:  XORLW  03
-026A:  BZ    029A
-026C:  BRA    02A4
+0262:  MOVF   1C,W
+0264:  XORLW  03
+0266:  BZ    0272
+0268:  XORLW  01
+026A:  BZ    028A
+026C:  XORLW  03
+026E:  BZ    02A2
+0270:  BRA    02BA
 .................... 		case 3: 
-.................... 			printf("\t\t\t%d", terceiraLeitura); 
-026E:  MOVLW  09
-0270:  MOVWF  24
-0272:  RCALL  010C
-0274:  MOVLW  09
-0276:  MOVWF  24
-0278:  RCALL  010C
-027A:  MOVLW  09
-027C:  MOVWF  24
-027E:  RCALL  010C
-0280:  MOVFF  1B,1E
-0284:  MOVLW  1F
-0286:  MOVWF  1F
-0288:  RCALL  015A
+.................... 			printf("\n\rTerceira Leitrua: 0x%X", terceiraLeitura); 
+0272:  MOVLW  18
+0274:  MOVWF  FF6
+0276:  MOVLW  01
+0278:  MOVWF  FF7
+027A:  MOVLW  16
+027C:  MOVWF  21
+027E:  RCALL  018A
+0280:  MOVFF  1B,21
+0284:  MOVLW  37
+0286:  MOVWF  22
+0288:  RCALL  01AA
 .................... 		case 2: 
-.................... 			printf("\t%d", segundaLeitura); 
-028A:  MOVLW  09
-028C:  MOVWF  24
-028E:  RCALL  010C
-0290:  MOVFF  1A,1E
-0294:  MOVLW  1F
-0296:  MOVWF  1F
-0298:  RCALL  015A
+.................... 			printf("\n\rSegunda Leitura:  0x%X", segundaLeitura); 
+028A:  MOVLW  32
+028C:  MOVWF  FF6
+028E:  MOVLW  01
+0290:  MOVWF  FF7
+0292:  MOVLW  16
+0294:  MOVWF  21
+0296:  RCALL  018A
+0298:  MOVFF  1A,21
+029C:  MOVLW  37
+029E:  MOVWF  22
+02A0:  RCALL  01AA
 .................... 		case 1: 
-.................... 			printf("%d", primeiraLeitura); 
-029A:  MOVFF  19,1E
-029E:  MOVLW  1F
-02A0:  MOVWF  1F
-02A2:  RCALL  015A
+.................... 			printf("\n\rPrimeira Leitura: 0x%X", primeiraLeitura); 
+02A2:  MOVLW  4C
+02A4:  MOVWF  FF6
+02A6:  MOVLW  01
+02A8:  MOVWF  FF7
+02AA:  MOVLW  16
+02AC:  MOVWF  21
+02AE:  RCALL  018A
+02B0:  MOVFF  19,21
+02B4:  MOVLW  37
+02B6:  MOVWF  22
+02B8:  RCALL  01AA
 .................... 		default: 
 .................... 			print = 0; 
-02A4:  CLRF   1C
+02BA:  CLRF   1C
 .................... 			break; 
-02A6:  BRA    02A8
+02BC:  BRA    02BE
 .................... 		} 
+.................... 		delay_ms(1500); 
+02BE:  MOVLW  06
+02C0:  MOVWF  21
+02C2:  MOVLW  FA
+02C4:  MOVWF  22
+02C6:  BRA    01EC
+02C8:  DECFSZ 21,F
+02CA:  BRA    02C2
 .................... 	} 
-02A8:  BRA    025E
+02CC:  BRA    0256
 .................... 	return 0; 
-02AA:  MOVLW  00
-02AC:  MOVWF  01
+02CE:  MOVLW  00
+02D0:  MOVWF  01
 .................... } 
-02AE:  SLEEP 
+02D2:  SLEEP 
 
 Configuration Fuses:
    Word  1: 2600   H4 NOOSCSEN
