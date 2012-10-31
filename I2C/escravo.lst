@@ -1,6 +1,6 @@
-CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:18
+CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:55
 
-               Filename: Z:\media\windows\Users\cuki\Eletronica\Projetos\I2CGit\I2C\escravo.lst
+               Filename: C:\Users\cuki\Eletronica\Projetos\I2CGit\I2C\escravo.lst
 
                ROM used: 684 bytes (2%)
                          Largest free fragment is 32080
@@ -69,11 +69,11 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:18
 .................... #list 
 ....................  
 ....................  
-.................... #fuses	HS,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP 
+.................... #fuses	H4,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP 
 .................... #fuses	NODEBUG,NOPROTECT,NOCPB,NOCPD,NOWRT,NOWRTC,NOWRTB 
 .................... #fuses	NOWRTD,NOEBTR,NOEBTRB 
 ....................  
-.................... #use delay(clock=8MHz) 
+.................... #use delay(clock=32MHz, crystal=8MHz) 
 .................... #use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1) 
 *
 010C:  MOVLW  08
@@ -93,7 +93,7 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:18
 012A:  BSF    FAC.0
 012C:  MOVFF  24,FAD
 0130:  RETURN 0
-.................... #use i2c(slave, scl=pin_c3, sda=pin_c4, fast=2000000, force_hw, address=0xB0) 
+.................... #use i2c(slave, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw, address=0xB0) 
 ....................  
 .................... static int primeiraLeitura, segundaLeitura, terceiraLeitura, print; 
 ....................  
@@ -170,7 +170,7 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:18
 0226:  BSF    07.7
 0228:  CLRF   FEA
 022A:  CLRF   FE9
-022C:  MOVLW  0C
+022C:  MOVLW  33
 022E:  MOVWF  FAF
 0230:  MOVLW  E2
 0232:  MOVWF  FAC
@@ -252,7 +252,7 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:18
 02AE:  SLEEP 
 
 Configuration Fuses:
-   Word  1: 2200   HS NOOSCSEN
+   Word  1: 2600   H4 NOOSCSEN
    Word  2: 0E0D   NOPUT NOBROWNOUT BORV20 NOWDT WDT128
    Word  3: 0100   CCP2C1
    Word  4: 0080   NOSTVREN NOLVP NODEBUG

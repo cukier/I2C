@@ -7,13 +7,13 @@
 
 #include <18F252.h>
 
-#fuses	HS,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP
+#fuses	H4,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP
 #fuses	NODEBUG,NOPROTECT,NOCPB,NOCPD,NOWRT,NOWRTC,NOWRTB
 #fuses	NOWRTD,NOEBTR,NOEBTRB
 
-#use delay(clock=8MHz)
+#use delay(clock=32MHz, crystal=8MHz)
 #use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1)
-#use i2c(slave, scl=pin_c3, sda=pin_c4, fast=2000000, force_hw, address=0xB0)
+#use i2c(slave, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw, address=0xB0)
 
 static int primeiraLeitura, segundaLeitura, terceiraLeitura, print;
 

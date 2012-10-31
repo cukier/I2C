@@ -1,15 +1,15 @@
-CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
+CCS PCH C Compiler, Version 4.124, 5967               31-out-12 14:57
 
-               Filename: Z:\media\windows\Users\cuki\Eletronica\Projetos\I2CGit\I2C\mestre.lst
+               Filename: C:\Users\cuki\Eletronica\Projetos\I2CGit\I2C\mestre.lst
 
-               ROM used: 1014 bytes (3%)
-                         Largest free fragment is 31750
-               RAM used: 29 (2%) at main() level
+               ROM used: 1020 bytes (3%)
+                         Largest free fragment is 31744
+               RAM used: 28 (2%) at main() level
                          35 (2%) worst case
                Stack:    4 worst case (3 in main + 1 for interrupts)
 
 *
-0000:  GOTO   02AA
+0000:  GOTO   0294
 *
 0008:  MOVWF  04
 000A:  MOVFF  FD8,05
@@ -38,7 +38,7 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
 0060:  BTFSS  FF0.4
 0062:  GOTO   006C
 0066:  BTFSC  FF0.1
-0068:  GOTO   00C4
+0068:  GOTO   00C6
 006C:  MOVFF  0E,00
 0070:  MOVFF  0F,01
 0074:  MOVFF  10,02
@@ -73,72 +73,71 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
 .................... #list 
 ....................  
 ....................  
-.................... #fuses	HS,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP 
+.................... #fuses	H4,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP 
 .................... #fuses	NODEBUG,NOPROTECT,NOCPB,NOCPD,NOWRT,NOWRTC,NOWRTB 
 .................... #fuses	NOWRTD,NOEBTR,NOEBTRB 
 ....................  
-.................... #use delay(clock=8MHz) 
+.................... #use delay(clock=32MHz, crystal=8MHz) 
 *
-0176:  CLRF   FEA
-0178:  MOVLW  1E
-017A:  MOVWF  FE9
-017C:  MOVF   FEF,W
-017E:  BZ    019A
-0180:  MOVLW  02
-0182:  MOVWF  01
-0184:  CLRF   00
-0186:  DECFSZ 00,F
-0188:  BRA    0186
-018A:  DECFSZ 01,F
-018C:  BRA    0184
-018E:  MOVLW  97
-0190:  MOVWF  00
-0192:  DECFSZ 00,F
-0194:  BRA    0192
-0196:  DECFSZ FEF,F
-0198:  BRA    0180
-019A:  RETURN 0
+0146:  CLRF   FEA
+0148:  MOVLW  1E
+014A:  MOVWF  FE9
+014C:  MOVF   FEF,W
+014E:  BZ    016A
+0150:  MOVLW  0A
+0152:  MOVWF  01
+0154:  CLRF   00
+0156:  DECFSZ 00,F
+0158:  BRA    0156
+015A:  DECFSZ 01,F
+015C:  BRA    0154
+015E:  MOVLW  5F
+0160:  MOVWF  00
+0162:  DECFSZ 00,F
+0164:  BRA    0162
+0166:  DECFSZ FEF,F
+0168:  BRA    0150
+016A:  RETURN 0
 .................... #use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1) 
+016C:  MOVLW  08
+016E:  MOVWF  01
+0170:  CLRF   21
+0172:  MOVFF  20,00
+0176:  MOVF   00,W
+0178:  XORWF  21,F
+017A:  RRCF   00,F
+017C:  DECFSZ 01,F
+017E:  BRA    0176
+0180:  BTFSS  F9E.4
+0182:  BRA    0180
+0184:  MOVLW  FE
+0186:  ANDWF  FAC,F
+0188:  BTFSC  21.0
+018A:  BSF    FAC.0
+018C:  MOVFF  20,FAD
+0190:  RETURN 0
+.................... #use i2c(master, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw) 
 *
-0130:  MOVLW  08
-0132:  MOVWF  01
-0134:  CLRF   21
-0136:  MOVFF  20,00
-013A:  MOVF   00,W
-013C:  XORWF  21,F
-013E:  RRCF   00,F
-0140:  DECFSZ 01,F
-0142:  BRA    013A
-0144:  BTFSS  F9E.4
-0146:  BRA    0144
-0148:  MOVLW  FE
-014A:  ANDWF  FAC,F
-014C:  BTFSC  21.0
-014E:  BSF    FAC.0
-0150:  MOVFF  20,FAD
-0154:  RETURN 0
-.................... #use i2c(master, scl=pin_c3, sda=pin_c4, fast=2000000, force_hw) 
-*
-01F8:  BCF    FC6.7
-01FA:  BCF    F9E.3
-01FC:  MOVFF  22,FC9
-0200:  MOVLW  02
-0202:  BTFSC  FC6.7
-0204:  BRA    0210
-0206:  BTFSS  F9E.3
-0208:  BRA    0206
-020A:  MOVLW  00
-020C:  BTFSC  FC5.6
-020E:  MOVLW  01
-0210:  MOVWF  01
-0212:  RETURN 0
+020E:  BCF    FC6.7
+0210:  BCF    F9E.3
+0212:  MOVFF  22,FC9
+0216:  MOVLW  02
+0218:  BTFSC  FC6.7
+021A:  BRA    0226
+021C:  BTFSS  F9E.3
+021E:  BRA    021C
+0220:  MOVLW  00
+0222:  BTFSC  FC5.6
+0224:  MOVLW  01
+0226:  MOVWF  01
+0228:  RETURN 0
 ....................  
 .................... #define addr_device 0xB0 
 .................... #define memory_addr 0x01 
 .................... #define data_addr	0x55 
 .................... #define debounce	500 
 ....................  
-.................... static short ext1, ext2; 
+.................... static int ext1, ext2; 
 ....................  
 .................... #INT_EXT1 
 .................... void isr_ext1() { 
@@ -146,94 +145,92 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
 *
 00BA:  BCF    FF0.0
 .................... 	ext1 = 1; 
-00BC:  BSF    19.0
+00BC:  MOVLW  01
+00BE:  MOVWF  19
 .................... } 
 ....................  
-00BE:  BCF    FF0.0
-00C0:  GOTO   006C
+00C0:  BCF    FF0.0
+00C2:  GOTO   006C
 .................... #INT_EXT2 
 .................... void isr_ext2() { 
 .................... 	clear_interrupt(INT_EXT2); 
-00C4:  BCF    FF0.1
+00C6:  BCF    FF0.1
 .................... 	ext2 = 1; 
-00C6:  BSF    19.1
+00C8:  MOVLW  01
+00CA:  MOVWF  1A
 .................... } 
 ....................  
-00C8:  BCF    FF0.1
-00CA:  GOTO   006C
+00CC:  BCF    FF0.1
+00CE:  GOTO   006C
 .................... short handshake(int addr) { 
 *
-0214:  BSF    21.0
+022A:  BSF    21.0
 .................... 	short ack = 1; 
 .................... 	i2c_start(); 
-0216:  BSF    FC5.0
-0218:  BTFSC  FC5.0
-021A:  BRA    0218
+022C:  BSF    FC5.0
+022E:  BTFSC  FC5.0
+0230:  BRA    022E
 .................... 	ack = i2c_write(addr); 
-021C:  MOVFF  20,22
-0220:  RCALL  01F8
-0222:  MOVF   01,W
-0224:  BCF    21.0
-0226:  BTFSC  01.0
-0228:  BSF    21.0
+0232:  MOVFF  20,22
+0236:  RCALL  020E
+0238:  MOVF   01,W
+023A:  BCF    21.0
+023C:  BTFSC  01.0
+023E:  BSF    21.0
 .................... 	i2c_stop(); 
-022A:  BSF    FC5.2
-022C:  BTFSC  FC5.2
-022E:  BRA    022C
+0240:  BSF    FC5.2
+0242:  BTFSC  FC5.2
+0244:  BRA    0242
+.................... 	delay_us(1); 
+0246:  MOVLW  02
+0248:  MOVWF  00
+024A:  DECFSZ 00,F
+024C:  BRA    024A
+024E:  NOP   
 .................... 	return ack; 
-0230:  MOVLW  00
-0232:  BTFSC  21.0
-0234:  MOVLW  01
-0236:  MOVWF  01
+0250:  MOVLW  00
+0252:  BTFSC  21.0
+0254:  MOVLW  01
+0256:  MOVWF  01
 .................... } 
-0238:  RETURN 0
+0258:  RETURN 0
 ....................  
 .................... int send_i2c(int addr, int mem, int data) { 
 .................... 	if (handshake(addr)) 
-023A:  MOVFF  1D,20
-023E:  RCALL  0214
-0240:  MOVF   01,F
-0242:  BZ    024C
+025A:  MOVFF  1D,20
+025E:  RCALL  022A
+0260:  MOVF   01,F
+0262:  BZ    026C
 .................... 		return 0xFF; 
-0244:  MOVLW  FF
-0246:  MOVWF  01
-0248:  BRA    0280
+0264:  MOVLW  FF
+0266:  MOVWF  01
+0268:  BRA    0290
 .................... 	else { 
-024A:  BRA    0280
+026A:  BRA    0290
 .................... 		i2c_start(); 
-024C:  BSF    FC5.0
-024E:  BTFSC  FC5.0
-0250:  BRA    024E
+026C:  BSF    FC5.0
+026E:  BTFSC  FC5.0
+0270:  BRA    026E
 .................... 		i2c_write(addr); 
-0252:  MOVFF  1D,22
-0256:  RCALL  01F8
+0272:  MOVFF  1D,22
+0276:  RCALL  020E
 .................... 		i2c_write(mem); 
-0258:  MOVFF  1E,22
-025C:  RCALL  01F8
-.................... 		i2c_start(); 
-025E:  BSF    FC5.1
-0260:  BTFSC  FC5.1
-0262:  BRA    0260
-.................... 		i2c_write(addr + 1); 
-0264:  MOVLW  01
-0266:  ADDWF  1D,W
-0268:  MOVWF  20
-026A:  MOVWF  22
-026C:  RCALL  01F8
+0278:  MOVFF  1E,22
+027C:  RCALL  020E
 .................... 		i2c_write(data); 
-026E:  MOVFF  1F,22
-0272:  RCALL  01F8
+027E:  MOVFF  1F,22
+0282:  RCALL  020E
 .................... 		i2c_stop(); 
-0274:  BSF    FC5.2
-0276:  BTFSC  FC5.2
-0278:  BRA    0276
+0284:  BSF    FC5.2
+0286:  BTFSC  FC5.2
+0288:  BRA    0286
 .................... 		return 0; 
-027A:  MOVLW  00
-027C:  MOVWF  01
-027E:  BRA    0280
+028A:  MOVLW  00
+028C:  MOVWF  01
+028E:  BRA    0290
 .................... 	} 
 .................... } 
-0280:  GOTO   03B8 (RETURN)
+0290:  GOTO   03C4 (RETURN)
 ....................  
 .................... int read_i2c(int addr, int data) { 
 .................... 	int retorno = 0; 
@@ -252,206 +249,224 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
 .................... } 
 ....................  
 .................... int main(void) { 
-*
-02AA:  CLRF   FF8
-02AC:  BCF    FD0.7
-02AE:  BSF    07.7
-02B0:  CLRF   FEA
-02B2:  CLRF   FE9
-02B4:  MOVLW  0C
-02B6:  MOVWF  FAF
-02B8:  MOVLW  E2
-02BA:  MOVWF  FAC
-02BC:  MOVLW  D0
-02BE:  MOVWF  FAB
-02C0:  BSF    F94.3
-02C2:  BSF    F94.4
-02C4:  CLRF   FC8
-02C6:  MOVLW  28
-02C8:  MOVWF  FC6
-02CA:  BSF    FC7.7
-02CC:  BCF    FC7.6
-02CE:  BSF    FC1.0
-02D0:  BSF    FC1.1
-02D2:  BSF    FC1.2
-02D4:  BCF    FC1.3
-02D6:  BCF    19.0
-02D8:  BCF    19.1
-02DA:  CLRF   1A
-02DC:  CLRF   1B
+0294:  CLRF   FF8
+0296:  BCF    FD0.7
+0298:  BSF    07.7
+029A:  CLRF   FEA
+029C:  CLRF   FE9
+029E:  MOVLW  33
+02A0:  MOVWF  FAF
+02A2:  MOVLW  E2
+02A4:  MOVWF  FAC
+02A6:  MOVLW  D0
+02A8:  MOVWF  FAB
+02AA:  BSF    F94.3
+02AC:  BSF    F94.4
+02AE:  MOVLW  07
+02B0:  MOVWF  FC8
+02B2:  MOVLW  28
+02B4:  MOVWF  FC6
+02B6:  BSF    FC7.7
+02B8:  BCF    FC7.6
+02BA:  BSF    FC1.0
+02BC:  BSF    FC1.1
+02BE:  BSF    FC1.2
+02C0:  BCF    FC1.3
+02C2:  CLRF   19
+02C4:  CLRF   1A
 ....................  
-.................... 	int cont = 0; 
-.................... 	int aux = 0; 
-....................  
+.................... 	port_b_pullups(true); 
+02C6:  BCF    FF1.7
 .................... 	enable_interrupts(INT_EXT1_H2L); 
-02DE:  BSF    FF0.3
-02E0:  BCF    FF1.5
+02C8:  BSF    FF0.3
+02CA:  BCF    FF1.5
 .................... 	enable_interrupts(INT_EXT2_H2L); 
-02E2:  BSF    FF0.4
-02E4:  BCF    FF1.4
+02CC:  BSF    FF0.4
+02CE:  BCF    FF1.4
 .................... 	enable_interrupts(GLOBAL); 
-02E6:  MOVLW  C0
-02E8:  IORWF  FF2,F
+02D0:  MOVLW  C0
+02D2:  IORWF  FF2,F
+.................... 	delay_ms(500); 
+02D4:  MOVLW  02
+02D6:  MOVWF  1D
+02D8:  MOVLW  FA
+02DA:  MOVWF  1E
+02DC:  RCALL  0146
+02DE:  DECFSZ 1D,F
+02E0:  BRA    02D8
 ....................  
 .................... 	while (true) { 
-.................... 		printf("\f Ext1 check\n Ext2 sent:"); 
-02EA:  MOVLW  CE
-02EC:  MOVWF  FF6
-02EE:  MOVLW  00
-02F0:  MOVWF  FF7
-02F2:  RCALL  0156
+.................... 		printf("\fCheck <- ext1\n\rSend  <- ext2\n\r"); 
+02E2:  MOVLW  D2
+02E4:  MOVWF  FF6
+02E6:  MOVLW  00
+02E8:  MOVWF  FF7
+02EA:  RCALL  0192
 .................... 		if (ext1) { 
-02F4:  BTFSS  19.0
-02F6:  BRA    035A
-.................... 			short ack = 0; 
-02F8:  BCF    1C.0
-.................... 			delay_ms(debounce); 
-02FA:  MOVLW  02
-02FC:  MOVWF  1D
-02FE:  MOVLW  FA
-0300:  MOVWF  1E
-0302:  RCALL  0176
-0304:  DECFSZ 1D,F
-0306:  BRA    02FE
+02EC:  MOVF   19,F
+02EE:  BZ    0362
 .................... 			ext1 = 0; 
-0308:  BCF    19.0
-.................... 			printf("\fIniciando 0x%X", addr_device); 
-030A:  MOVLW  E8
-030C:  MOVWF  FF6
-030E:  MOVLW  00
-0310:  MOVWF  FF7
-0312:  MOVLW  0D
-0314:  MOVWF  1D
-0316:  RCALL  019C
-0318:  MOVLW  B0
-031A:  MOVWF  1D
-031C:  MOVLW  37
-031E:  MOVWF  1E
-0320:  RCALL  01BA
-.................... 			do { 
-.................... 				ack = handshake(addr_device); 
-0322:  MOVLW  B0
-0324:  MOVWF  20
-0326:  RCALL  0214
-0328:  BCF    1C.0
-032A:  BTFSC  01.0
-032C:  BSF    1C.0
-.................... 				if (ack) { 
-032E:  BTFSS  1C.0
-0330:  BRA    0340
-.................... 					printf("\n Nao repondendo"); 
-0332:  MOVLW  F8
-0334:  MOVWF  FF6
-0336:  MOVLW  00
-0338:  MOVWF  FF7
-033A:  RCALL  0156
-.................... 					cont--; 
-033C:  DECF   1A,F
-.................... 				} else 
-033E:  BRA    0352
-.................... 					printf("\nOk"); 
-0340:  MOVLW  0A
-0342:  MOVWF  20
-0344:  RCALL  0130
-0346:  MOVLW  4F
-0348:  MOVWF  20
-034A:  RCALL  0130
-034C:  MOVLW  6B
-034E:  MOVWF  20
-0350:  RCALL  0130
-.................... 			} while (ack || ext1); 
-0352:  BTFSC  1C.0
-0354:  BRA    0322
-0356:  BTFSC  19.0
-0358:  BRA    0322
-.................... 		} 
-.................... 		if (ext2) { 
-035A:  BTFSS  19.1
-035C:  BRA    03F2
+02F0:  CLRF   19
+.................... 			int ack = 0; 
+02F2:  CLRF   1B
+.................... 			printf("ext1"); 
+02F4:  MOVLW  F2
+02F6:  MOVWF  FF6
+02F8:  MOVLW  00
+02FA:  MOVWF  FF7
+02FC:  RCALL  0192
 .................... 			delay_ms(debounce); 
-035E:  MOVLW  02
-0360:  MOVWF  1D
-0362:  MOVLW  FA
-0364:  MOVWF  1E
-0366:  RCALL  0176
-0368:  DECFSZ 1D,F
-036A:  BRA    0362
+02FE:  MOVLW  02
+0300:  MOVWF  1D
+0302:  MOVLW  FA
+0304:  MOVWF  1E
+0306:  RCALL  0146
+0308:  DECFSZ 1D,F
+030A:  BRA    0302
+.................... 			do { 
+.................... 				printf("\fIniciando 0x%X", addr_device); 
+030C:  MOVLW  F8
+030E:  MOVWF  FF6
+0310:  MOVLW  00
+0312:  MOVWF  FF7
+0314:  MOVLW  0D
+0316:  MOVWF  1D
+0318:  RCALL  01B2
+031A:  MOVLW  B0
+031C:  MOVWF  1D
+031E:  MOVLW  37
+0320:  MOVWF  1E
+0322:  RCALL  01D0
+.................... 				ack = handshake(addr_device); 
+0324:  MOVLW  B0
+0326:  MOVWF  20
+0328:  RCALL  022A
+032A:  MOVFF  01,1B
+.................... 				if (ack) { 
+032E:  MOVF   1B,F
+0330:  BZ    033E
+.................... 					printf("\n\rNao repondendo"); 
+0332:  MOVLW  08
+0334:  MOVWF  FF6
+0336:  MOVLW  01
+0338:  MOVWF  FF7
+033A:  RCALL  0192
+.................... 				} else 
+033C:  BRA    0348
+.................... 					printf("\n\rOk"); 
+033E:  MOVLW  1A
+0340:  MOVWF  FF6
+0342:  MOVLW  01
+0344:  MOVWF  FF7
+0346:  RCALL  0192
+.................... 				delay_ms(1000); 
+0348:  MOVLW  04
+034A:  MOVWF  1D
+034C:  MOVLW  FA
+034E:  MOVWF  1E
+0350:  RCALL  0146
+0352:  DECFSZ 1D,F
+0354:  BRA    034C
+.................... 			} while (ack && !ext1); 
+0356:  MOVF   1B,F
+0358:  BZ    035E
+035A:  MOVF   19,F
+035C:  BZ    030C
+.................... 			ext1 = 0; 
+035E:  CLRF   19
+.................... 		} else if (ext2) { 
+0360:  BRA    03EA
+0362:  MOVF   1A,F
+0364:  BZ    03EA
 .................... 			ext2 = 0; 
-036C:  BCF    19.1
-.................... 			printf("\fEscrevendo 0x%X\nem 0x%X :", data_addr, memory_addr); 
-036E:  MOVLW  0A
-0370:  MOVWF  FF6
-0372:  MOVLW  01
-0374:  MOVWF  FF7
-0376:  MOVLW  0E
-0378:  MOVWF  1D
-037A:  RCALL  019C
-037C:  MOVLW  55
-037E:  MOVWF  1D
-0380:  MOVLW  37
-0382:  MOVWF  1E
-0384:  RCALL  01BA
-0386:  MOVLW  1A
-0388:  MOVWF  FF6
-038A:  MOVLW  01
-038C:  MOVWF  FF7
-038E:  MOVLW  06
+0366:  CLRF   1A
+.................... 			printf("ext1"); 
+0368:  MOVLW  20
+036A:  MOVWF  FF6
+036C:  MOVLW  01
+036E:  MOVWF  FF7
+0370:  RCALL  0192
+.................... 			delay_ms(debounce); 
+0372:  MOVLW  02
+0374:  MOVWF  1D
+0376:  MOVLW  FA
+0378:  MOVWF  1E
+037A:  RCALL  0146
+037C:  DECFSZ 1D,F
+037E:  BRA    0376
+.................... 			printf("\fEscrevendo 0x%X\nem 0x%X ", data_addr, memory_addr); 
+0380:  MOVLW  26
+0382:  MOVWF  FF6
+0384:  MOVLW  01
+0386:  MOVWF  FF7
+0388:  MOVLW  0E
+038A:  MOVWF  1D
+038C:  RCALL  01B2
+038E:  MOVLW  55
 0390:  MOVWF  1D
-0392:  RCALL  019C
-0394:  MOVLW  01
-0396:  MOVWF  1D
-0398:  MOVLW  37
-039A:  MOVWF  1E
-039C:  RCALL  01BA
-039E:  MOVLW  20
-03A0:  MOVWF  20
-03A2:  RCALL  0130
-03A4:  MOVLW  3A
-03A6:  MOVWF  20
-03A8:  RCALL  0130
-.................... 			aux = send_i2c(addr_device, memory_addr, data_addr); 
-03AA:  MOVLW  B0
-03AC:  MOVWF  1D
-03AE:  MOVLW  01
-03B0:  MOVWF  1E
-03B2:  MOVLW  55
-03B4:  MOVWF  1F
-03B6:  BRA    023A
-03B8:  MOVFF  01,1B
-.................... 			delay_ms(500); 
-03BC:  MOVLW  02
-03BE:  MOVWF  1D
-03C0:  MOVLW  FA
-03C2:  MOVWF  1E
-03C4:  RCALL  0176
-03C6:  DECFSZ 1D,F
-03C8:  BRA    03C0
-.................... 			printf("  %s", aux == 0xFF ? "Error" : "Ok"); 
-03CA:  INCFSZ 1B,W
-03CC:  BRA    03D6
-03CE:  MOVLW  01
-03D0:  MOVWF  03
-03D2:  MOVLW  26
-03D4:  BRA    03DC
-03D6:  MOVLW  01
-03D8:  MOVWF  03
-03DA:  MOVLW  2C
-03DC:  MOVWF  1D
-03DE:  MOVLW  20
+0392:  MOVLW  37
+0394:  MOVWF  1E
+0396:  RCALL  01D0
+0398:  MOVLW  36
+039A:  MOVWF  FF6
+039C:  MOVLW  01
+039E:  MOVWF  FF7
+03A0:  MOVLW  06
+03A2:  MOVWF  1D
+03A4:  RCALL  01B2
+03A6:  MOVLW  01
+03A8:  MOVWF  1D
+03AA:  MOVLW  37
+03AC:  MOVWF  1E
+03AE:  RCALL  01D0
+03B0:  MOVLW  20
+03B2:  MOVWF  20
+03B4:  RCALL  016C
+.................... 			int aux = send_i2c(addr_device, memory_addr, data_addr); 
+03B6:  MOVLW  B0
+03B8:  MOVWF  1D
+03BA:  MOVLW  01
+03BC:  MOVWF  1E
+03BE:  MOVLW  55
+03C0:  MOVWF  1F
+03C2:  BRA    025A
+03C4:  MOVFF  01,1C
+.................... //			printf("  %s", (aux == 0xFF) ? "Err" : "Ok"); 
+.................... 			if (aux == 0xFF) 
+03C8:  INCFSZ 1C,W
+03CA:  BRA    03D8
+.................... 				printf(" Err"); 
+03CC:  MOVLW  40
+03CE:  MOVWF  FF6
+03D0:  MOVLW  01
+03D2:  MOVWF  FF7
+03D4:  RCALL  0192
+.................... 			else 
+03D6:  BRA    03EA
+.................... 				printf(" Ok"); 
+03D8:  MOVLW  20
+03DA:  MOVWF  20
+03DC:  RCALL  016C
+03DE:  MOVLW  4F
 03E0:  MOVWF  20
-03E2:  RCALL  0130
-03E4:  MOVLW  20
+03E2:  RCALL  016C
+03E4:  MOVLW  6B
 03E6:  MOVWF  20
-03E8:  RCALL  0130
-03EA:  CLRF   FEA
-03EC:  MOVFF  1D,FE9
-03F0:  BRA    0284
+03E8:  RCALL  016C
 .................... 		} 
+.................... 		delay_ms(1000); 
+03EA:  MOVLW  04
+03EC:  MOVWF  1D
+03EE:  MOVLW  FA
+03F0:  MOVWF  1E
+03F2:  RCALL  0146
+03F4:  DECFSZ 1D,F
+03F6:  BRA    03EE
 .................... 	} 
-03F2:  BRA    02EA
+03F8:  BRA    02E2
 .................... 	return 0; 
-03F4:  MOVLW  00
-03F6:  MOVWF  01
+03FA:  MOVLW  00
+03FC:  MOVWF  01
 .................... } 
 ....................  
 .................... /*		switch (cont++) { 
@@ -474,10 +489,10 @@ CCS PCH C Compiler, Version 4.124, 5967               29-Oct-12 10:11
 ....................  cont = 0; 
 ....................  break; 
 ....................  }*/ 
-03F8:  SLEEP 
+03FE:  SLEEP 
 
 Configuration Fuses:
-   Word  1: 2200   HS NOOSCSEN
+   Word  1: 2600   H4 NOOSCSEN
    Word  2: 0E0D   NOPUT NOBROWNOUT BORV20 NOWDT WDT128
    Word  3: 0100   CCP2C1
    Word  4: 0080   NOSTVREN NOLVP NODEBUG
