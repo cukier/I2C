@@ -39,7 +39,6 @@ short handshake(int addr) {
 	i2c_start();
 	ack = i2c_write(addr);
 	i2c_stop();
-	delay_us(1);
 	return ack;
 }
 
@@ -87,8 +86,8 @@ int main(void) {
 			int ack = 0;
 			printf("ext1");
 			delay_ms(debounce);
+			printf("\fIniciando 0x%X", addr_device);
 			do {
-				printf("\fIniciando 0x%X", addr_device);
 				ack = handshake(addr_device);
 				if (ack) {
 					printf("\n\rNao repondendo");
