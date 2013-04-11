@@ -3,21 +3,14 @@
  * 11/04/2013 08:06
  */
 
-#include <16F876A.H>
-
+#include <18F252.H>
+#include "defines.h"
 // 10-bit A/D conversion
 #device ADC=10
 #fuses HS,NOWDT,NOPROTECT,NOLVP
 
 #use Delay(Clock=20000000)
 #use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7,brgh1ok)
-
-#include <input.c>
-
-#define EEPROM_SDA  PIN_C4
-#define EEPROM_SCL  PIN_C3
-#define SLAVE_ADDRESS 0x02
-
 #use i2c(master, sda=EEPROM_SDA, scl=EEPROM_SCL, FORCE_HW)
 
 void initI2C() {

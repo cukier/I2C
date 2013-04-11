@@ -3,84 +3,38 @@
  * 11/04/2013 08:06
  */
 
-#include <16F876A.H>
+#include <18F252.h>
+#include "defines.h"
 
-// 10-bit A/D conversion
-#device ADC=10
-#fuses HS,NOWDT,NOPROTECT,NOLVP
+#fuses H4,NOWDT,NOPROTECT,NOLVP
 
-#use Delay(Clock=20000000)
-#use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7,brgh1ok)
+#use delay(Clock=40MHz, chrystal=10MHz)
+#use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7)
+#use i2c(slave, sda=EEPROM_SDA, scl=EEPROM_SCL, FORCE_HW)
 
-unsigned char read_i2c(void);
+int read_i2c(void);
 void i2c_interrupt_handler(void);
 void i2c_initialize(void);
 void i2c_error(void);
-void write_i2c(unsigned char transmit_byte);
+void write_i2c(int transmit_byte);
 
 #INT_SSP
 void ssp_interupt() {
 	i2c_interrupt_handler();
 }
 
-/* 16f87X bytes */
-/* Change it per chip */
-#byte PIC_SSPBUF=0x13
-#byte PIC_SSPADD=0x93
-#byte PIC_SSPSTAT=0x94
-#byte PIC_SSPCON1=0x14
-#byte PIC_SSPCON2=0x91
-
-/* Bit defines */
-#define PIC_SSPSTAT_BIT_SMP     0x80
-#define PIC_SSPSTAT_BIT_CKE     0x40
-#define PIC_SSPSTAT_BIT_DA      0x20
-#define PIC_SSPSTAT_BIT_P       0x10
-#define PIC_SSPSTAT_BIT_S       0x08
-#define PIC_SSPSTAT_BIT_RW      0x04
-#define PIC_SSPSTAT_BIT_UA      0x02
-#define PIC_SSPSTAT_BIT_BF      0x01
-
-#define PIC_SSPCON1_BIT_WCOL    0x80
-#define PIC_SSPCON1_BIT_SSPOV   0x40
-#define PIC_SSPCON1_BIT_SSPEN   0x20
-#define PIC_SSPCON1_BIT_CKP     0x10
-#define PIC_SSPCON1_BIT_SSPM3   0x08
-#define PIC_SSPCON1_BIT_SSPM2   0x04
-#define PIC_SSPCON1_BIT_SSPM1   0x02
-#define PIC_SSPCON1_BIT_SSPM0   0x01
-
-#define PIC_SSPCON2_BIT_GCEN    0x80
-#define PIC_SSPCON2_BIT_ACKSTAT 0x40
-#define PIC_SSPCON2_BIT_ACKDT   0x20
-#define PIC_SSPCON2_BIT_ACKEN   0x10
-#define PIC_SSPCON2_BIT_RCEN    0x08
-#define PIC_SSPCON2_BIT_PEN     0x04
-#define PIC_SSPCON2_BIT_RSEN    0x02
-#define PIC_SSPCON2_BIT_SEN     0x01
-
-#define RX_BUF_LEN  32
-#define NODE_ADDR   0x02    /* I2C address of the slave node */
-
-unsigned char slave_buffer[RX_BUF_LEN];
+int slave_buffer[RX_BUF_LEN];
 int buffer_index;
 int comms_error;
 int debug_state;
 
-void i2c_initialize(void) {
-	/* Set up SSP module for 7-bit */
-	PIC_SSPCON1 = 0x36; /* 0011 0101 */
-	PIC_SSPADD = NODE_ADDR; /* Set the slave's address */
-	PIC_SSPSTAT = 0x00; /* Clear the SSPSTAT register. */
-	enable_interrupts(INT_SSP); /* Enable MSSP interrupts. */
-}
 
 void i2c_interrupt_handler(void) {
 
-	unsigned char i2c_mask = 0x2D; /* 0010 1101 */
-	unsigned char temp_sspstat;
-	unsigned char this_byte;
-	unsigned char tx_byte;
+	int i2c_mask = 0x2D; /* 0010 1101 */
+	int temp_sspstat;
+	int this_byte;
+	int tx_byte;
 	int x;
 
 	/* Mask out the unnecessary bits */
@@ -159,8 +113,8 @@ void i2c_error(void) {
 	printf("I2C ERROR!\r\n");
 }
 
-void write_i2c(unsigned char transmit_byte) {
-	unsigned char write_collision = 1;
+void write_i2c(int transmit_byte) {
+	int write_collision = 1;
 
 	while (PIC_SSPSTAT & PIC_SSPSTAT_BIT_BF) /* Is BF bit set in PIC_SSPSTAT? */
 	{
@@ -186,13 +140,13 @@ void write_i2c(unsigned char transmit_byte) {
 }
 
 /* This function returns the byte in SSPBUF */
-unsigned char read_i2c(void) {
+int read_i2c(void) {
 	return PIC_SSPBUF;
 }
 
 void main(void) {
 	debug_state = 0;
-	i2c_initialize();
+	enable_interrupts(INT_SSP); /* Enable MSSP interrupts. */
 	enable_interrupts(GLOBAL);
 	printf("i2c slave 09 Jan 2005\n\r\n\r");
 
