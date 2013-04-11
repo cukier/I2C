@@ -1,0 +1,102 @@
+004-005 @READ_PROGRAM_MEMORY8.P1
+004     @WRITE_PROGRAM_MEMORY8.P2
+015     CCP_1
+015     CCP_1_LOW
+016     CCP_1_HIGH
+01B     CCP_2_LOW
+01B     CCP_2
+01C     CCP_2_HIGH
+020     @TRIS_C
+021     MAIN.cmd
+022-023 MAIN.value
+024     gethexword.lo
+024     readI2C.b1
+024-025 writeI2C.word
+024     @PSTRINGCN7_9600_62_63.P1
+024     @PRINTF_X_9600_62_63.P2
+024     @PSTRINGC7_9600_62_63.@SCRATCH1
+025     readI2C.b2
+025     @PRINTF_X_9600_62_63.P1
+025     gethexword.hi
+025     @PSTRINGC7_9600_62_63.@SCRATCH2
+025     @PSTRINGCN7_9600_62_63.@SCRATCH1
+026     @I2C_READU_1.P1
+026     gethex.lo
+026     writeI2C.@SCRATCH1
+026     @PSTRINGC7_9600_62_63.@SCRATCH3
+026     @PSTRINGCN7_9600_62_63.@SCRATCH2
+027     gethex.hi
+027     writeI2C.@SCRATCH2
+027     @PSTRINGC7_9600_62_63.@SCRATCH4
+027     @PSTRINGCN7_9600_62_63.@SCRATCH3
+028     gethex1.digit
+028     @I2C_WRITEU_1.P1
+028     gethex.@SCRATCH1
+028     @PSTRINGCN7_9600_62_63.@SCRATCH4
+029     gethex1.@SCRATCH1
+077     @SCRATCH
+078     @SCRATCH
+078     _RETURN_
+079     @SCRATCH
+07A     @SCRATCH
+09C.6   C1OUT
+09C.7   C2OUT
+10D-10E @WRITE_PROGRAM_MEMORY8.P1
+10D-10E @READ_PROGRAM_MEMORY8.P2
+
+ROM Allocation:
+0144  gethex1
+0166  gethex
+0088  @I2C_WRITEU_1
+0098  @I2C_READU_1
+002E  initI2C
+018C  writeI2C
+00A8  readI2C
+017D  gethexword
+01AA  MAIN
+0004  @const96
+003B  @PSTRINGC7_9600_62_63
+0012  @const98
+001B  @const99
+00C9  @PSTRINGCN7_9600_62_63
+0121  @PRINTF_X_9600_62_63
+0023  @const105
+01AA  @cinit
+
+
+User Memory space: 
+
+User Memory space: 
+
+Project Directory:
+    E:\Eletronica\Projetos\I2C\
+
+Project Files:
+    mestre.c                                                [11-abr-13 10:14  CRC=B5EB6D22]
+    C:\PICC\devices\16F876A.H                               [27-jul-11 18:03  CRC=328D8EE4]
+    C:\PICC\drivers\input.c                                 [18-set-07 09:16  CRC=DE0FD50A]
+    C:\PICC\drivers\ctype.h                                 [03-jan-08 13:55  CRC=2D1F019F]
+
+Source signature=20C6D44E
+
+Units:
+    E:\Eletronica\Projetos\I2C\mestre (main)
+
+Compiler Settings:
+    Processor:      PIC16F876A
+    Pointer Size:   16
+    ADC Range:      0-1023
+    Opt Level:      9
+    Short,Int,Long: UNSIGNED: 1,8,16
+    Float,Double:   32,32
+
+Output Files:
+    Errors:      mestre.err
+    Ext Symbols: mestre.esym
+    INHX8:       mestre.hex
+    Symbols:     mestre.sym
+    List:        mestre.lst
+    Debug/COFF:  mestre.cof
+    Project:     mestre.PJT
+    Call Tree:   mestre.tre
+    Statistics:  mestre.STA

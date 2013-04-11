@@ -1,0 +1,469 @@
+CCS PCM C Compiler, Version 4.124, 5967               11-abr-13 10:13
+
+               Filename: E:\Eletronica\Projetos\I2C\escravo.lst
+
+               ROM used: 334 words (4%)
+                         Largest free fragment is 2048
+               RAM used: 48 (13%) at main() level
+                         61 (17%) worst case
+               Stack:    3 worst case (1 in main + 2 for interrupts)
+
+*
+0000:  MOVLW  01
+0001:  MOVWF  0A
+0002:  GOTO   123
+0003:  NOP
+0004:  MOVWF  7F
+0005:  SWAPF  03,W
+0006:  CLRF   03
+0007:  MOVWF  21
+0008:  MOVF   0A,W
+0009:  MOVWF  20
+000A:  CLRF   0A
+000B:  MOVF   04,W
+000C:  MOVWF  22
+000D:  MOVF   77,W
+000E:  MOVWF  23
+000F:  MOVF   78,W
+0010:  MOVWF  24
+0011:  MOVF   79,W
+0012:  MOVWF  25
+0013:  MOVF   7A,W
+0014:  MOVWF  26
+0015:  BCF    03.7
+0016:  BCF    03.5
+0017:  MOVLW  8C
+0018:  MOVWF  04
+0019:  BTFSS  00.3
+001A:  GOTO   01D
+001B:  BTFSC  0C.3
+001C:  GOTO   02E
+001D:  MOVF   22,W
+001E:  MOVWF  04
+001F:  MOVF   23,W
+0020:  MOVWF  77
+0021:  MOVF   24,W
+0022:  MOVWF  78
+0023:  MOVF   25,W
+0024:  MOVWF  79
+0025:  MOVF   26,W
+0026:  MOVWF  7A
+0027:  MOVF   20,W
+0028:  MOVWF  0A
+0029:  SWAPF  21,W
+002A:  MOVWF  03
+002B:  SWAPF  7F,F
+002C:  SWAPF  7F,W
+002D:  RETFIE
+002E:  BCF    0A.3
+002F:  BCF    0A.4
+0030:  GOTO   096
+.................... /* 
+....................  * http://www.ccsinfo.com/forum/viewtopic.php?t=21456 
+....................  * 11/04/2013 08:06 
+....................  */ 
+....................  
+.................... #include <16F876A.H> 
+.................... //////// Standard Header file for the PIC16F876A device //////////////// 
+.................... #device PIC16F876A 
+.................... #list 
+....................  
+....................  
+.................... // 10-bit A/D conversion 
+.................... #device ADC=10 
+.................... #fuses HS,NOWDT,NOPROTECT,NOLVP 
+....................  
+.................... #use Delay(Clock=20000000) 
+.................... #use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7,brgh1ok) 
+....................  
+.................... unsigned char read_i2c(void); 
+.................... void i2c_interrupt_handler(void); 
+.................... void i2c_initialize(void); 
+.................... void i2c_error(void); 
+.................... void write_i2c(unsigned char transmit_byte); 
+....................  
+.................... #INT_SSP 
+.................... void ssp_interupt() { 
+.................... 	i2c_interrupt_handler(); 
+.................... } 
+....................  
+.................... /* 16f87X bytes */ 
+.................... /* Change it per chip */ 
+*
+0100:  BCF    0C.3
+0101:  BCF    0A.3
+0102:  BCF    0A.4
+0103:  GOTO   01D
+.................... #byte PIC_SSPBUF=0x13 
+.................... #byte PIC_SSPADD=0x93 
+.................... #byte PIC_SSPSTAT=0x94 
+.................... #byte PIC_SSPCON1=0x14 
+.................... #byte PIC_SSPCON2=0x91 
+....................  
+.................... /* Bit defines */ 
+.................... #define PIC_SSPSTAT_BIT_SMP     0x80 
+.................... #define PIC_SSPSTAT_BIT_CKE     0x40 
+.................... #define PIC_SSPSTAT_BIT_DA      0x20 
+.................... #define PIC_SSPSTAT_BIT_P       0x10 
+.................... #define PIC_SSPSTAT_BIT_S       0x08 
+.................... #define PIC_SSPSTAT_BIT_RW      0x04 
+.................... #define PIC_SSPSTAT_BIT_UA      0x02 
+.................... #define PIC_SSPSTAT_BIT_BF      0x01 
+....................  
+.................... #define PIC_SSPCON1_BIT_WCOL    0x80 
+.................... #define PIC_SSPCON1_BIT_SSPOV   0x40 
+.................... #define PIC_SSPCON1_BIT_SSPEN   0x20 
+.................... #define PIC_SSPCON1_BIT_CKP     0x10 
+.................... #define PIC_SSPCON1_BIT_SSPM3   0x08 
+.................... #define PIC_SSPCON1_BIT_SSPM2   0x04 
+.................... #define PIC_SSPCON1_BIT_SSPM1   0x02 
+.................... #define PIC_SSPCON1_BIT_SSPM0   0x01 
+....................  
+.................... #define PIC_SSPCON2_BIT_GCEN    0x80 
+.................... #define PIC_SSPCON2_BIT_ACKSTAT 0x40 
+.................... #define PIC_SSPCON2_BIT_ACKDT   0x20 
+.................... #define PIC_SSPCON2_BIT_ACKEN   0x10 
+.................... #define PIC_SSPCON2_BIT_RCEN    0x08 
+.................... #define PIC_SSPCON2_BIT_PEN     0x04 
+.................... #define PIC_SSPCON2_BIT_RSEN    0x02 
+.................... #define PIC_SSPCON2_BIT_SEN     0x01 
+....................  
+.................... #define RX_BUF_LEN  32 
+.................... #define NODE_ADDR   0x02    /* I2C address of the slave node */ 
+....................  
+.................... unsigned char slave_buffer[RX_BUF_LEN]; 
+.................... int buffer_index; 
+.................... int comms_error; 
+.................... int debug_state; 
+....................  
+.................... void i2c_initialize(void) { 
+.................... 	/* Set up SSP module for 7-bit */ 
+.................... 	PIC_SSPCON1 = 0x36; /* 0011 0101 */ 
+*
+0118:  MOVLW  36
+0119:  MOVWF  14
+.................... 	PIC_SSPADD = NODE_ADDR; /* Set the slave's address */ 
+011A:  MOVLW  02
+011B:  BSF    03.5
+011C:  MOVWF  13
+.................... 	PIC_SSPSTAT = 0x00; /* Clear the SSPSTAT register. */ 
+011D:  CLRF   14
+.................... 	enable_interrupts(INT_SSP); /* Enable MSSP interrupts. */ 
+011E:  BSF    0C.3
+.................... } 
+011F:  BCF    03.5
+0120:  BCF    0A.3
+0121:  BCF    0A.4
+0122:  GOTO   139 (RETURN)
+....................  
+.................... void i2c_interrupt_handler(void) { 
+*
+0096:  MOVLW  2D
+0097:  MOVWF  4F
+....................  
+.................... 	unsigned char i2c_mask = 0x2D; /* 0010 1101 */ 
+.................... 	unsigned char temp_sspstat; 
+.................... 	unsigned char this_byte; 
+.................... 	unsigned char tx_byte; 
+.................... 	int x; 
+....................  
+.................... 	/* Mask out the unnecessary bits */ 
+.................... 	temp_sspstat = PIC_SSPSTAT & i2c_mask; 
+0098:  BSF    03.5
+0099:  MOVF   14,W
+009A:  BCF    03.5
+009B:  ANDWF  4F,W
+009C:  MOVWF  50
+....................  
+.................... 	switch (temp_sspstat) { 
+009D:  MOVF   50,W
+009E:  XORLW  09
+009F:  BTFSC  03.2
+00A0:  GOTO   0AE
+00A1:  XORLW  20
+00A2:  BTFSC  03.2
+00A3:  GOTO   0C1
+00A4:  XORLW  25
+00A5:  BTFSC  03.2
+00A6:  GOTO   0D3
+00A7:  XORLW  20
+00A8:  BTFSC  03.2
+00A9:  GOTO   0E1
+00AA:  XORLW  04
+00AB:  BTFSC  03.2
+00AC:  GOTO   0F3
+00AD:  GOTO   0F6
+.................... 	/* Write operation, last byte was an address, buffer is full */ 
+.................... 	case 0x09: /* 0000 1001 */ 
+.................... 		/* Clear the receive buffer */ 
+.................... 		for (x = 0; x < RX_BUF_LEN; x++) { 
+00AE:  CLRF   53
+00AF:  MOVF   53,W
+00B0:  SUBLW  1F
+00B1:  BTFSS  03.0
+00B2:  GOTO   0BA
+.................... 			slave_buffer[x] = 0x00; 
+00B3:  MOVLW  28
+00B4:  ADDWF  53,W
+00B5:  MOVWF  04
+00B6:  BCF    03.7
+00B7:  CLRF   00
+.................... 		} 
+00B8:  INCF   53,F
+00B9:  GOTO   0AF
+.................... 		buffer_index = 0; /* Clear the buffer index */ 
+00BA:  CLRF   48
+.................... 		this_byte = read_i2c(); /* Do a dummy read of PIC_SSPBUF */ 
+00BB:  CALL   031
+00BC:  MOVF   78,W
+00BD:  MOVWF  51
+....................  
+.................... 		debug_state = 1; 
+00BE:  MOVLW  01
+00BF:  MOVWF  4A
+.................... 		break; 
+00C0:  GOTO   100
+....................  
+.................... 		/* Write operation, last byte was data, buffer is full */ 
+.................... 	case 0x29: /* 0010 1001 */ 
+.................... 		/* Point to the buffer */ 
+.................... 		this_byte = read_i2c(); /* Get the byte from the SSP */ 
+00C1:  CALL   031
+00C2:  MOVF   78,W
+00C3:  MOVWF  51
+.................... 		slave_buffer[buffer_index] = this_byte; /* Put it into the buffer */ 
+00C4:  MOVLW  28
+00C5:  ADDWF  48,W
+00C6:  MOVWF  04
+00C7:  BCF    03.7
+00C8:  MOVF   51,W
+00C9:  MOVWF  00
+.................... 		buffer_index++; /* Increment the buffer pointer */ 
+00CA:  INCF   48,F
+.................... 		/* Get the current buffer index */ 
+.................... 		/* Subtract the buffer length */ 
+.................... 		/* Has the index exceeded the buffer length? */ 
+.................... 		if (buffer_index >= RX_BUF_LEN) { 
+00CB:  MOVF   48,W
+00CC:  SUBLW  1F
+00CD:  BTFSC  03.0
+00CE:  GOTO   0D0
+.................... 			buffer_index = 0; /* Yes, clear the buffer index. */ 
+00CF:  CLRF   48
+.................... 		} 
+.................... 		debug_state = 2; 
+00D0:  MOVLW  02
+00D1:  MOVWF  4A
+.................... 		break; 
+00D2:  GOTO   100
+....................  
+.................... 		/* Read operation; last byte was an address, buffer is empty */ 
+.................... 	case 0x0C: /* 0000 1100 */ 
+.................... 		buffer_index = 0; /* Clear the buffer index */ 
+00D3:  CLRF   48
+.................... 		/* Point to the buffer */ 
+.................... 		tx_byte = slave_buffer[buffer_index]; /* Get byte from the buffer */ 
+00D4:  MOVLW  28
+00D5:  ADDWF  48,W
+00D6:  MOVWF  04
+00D7:  BCF    03.7
+00D8:  MOVF   00,W
+00D9:  MOVWF  52
+.................... 		write_i2c(tx_byte); /* Write the byte to PIC_SSPBUF */ 
+00DA:  MOVF   52,W
+00DB:  MOVWF  54
+00DC:  CALL   034
+.................... 		buffer_index++; /* increment the buffer index */ 
+00DD:  INCF   48,F
+.................... 		debug_state = 3; 
+00DE:  MOVLW  03
+00DF:  MOVWF  4A
+.................... 		break; 
+00E0:  GOTO   100
+....................  
+.................... 		/* Read operation; last byte was data, buffer is empty */ 
+.................... 	case 0x2C: /* 0010 1100 */ 
+.................... 		/* Get the current buffer index */ 
+.................... 		/* Subtract the buffer length */ 
+.................... 		/* Has the index exceeded the buffer length? */ 
+.................... 		if (buffer_index >= RX_BUF_LEN) { 
+00E1:  MOVF   48,W
+00E2:  SUBLW  1F
+00E3:  BTFSC  03.0
+00E4:  GOTO   0E6
+.................... 			buffer_index = 0; /* Yes, clear the buffer index */ 
+00E5:  CLRF   48
+.................... 		} 
+.................... 		/* Point to the buffer */ 
+.................... 		/* Get the byte */ 
+.................... 		tx_byte = slave_buffer[buffer_index]; 
+00E6:  MOVLW  28
+00E7:  ADDWF  48,W
+00E8:  MOVWF  04
+00E9:  BCF    03.7
+00EA:  MOVF   00,W
+00EB:  MOVWF  52
+.................... 		write_i2c(tx_byte); /* Write to PIC_SSPBUF */ 
+00EC:  MOVF   52,W
+00ED:  MOVWF  54
+00EE:  CALL   034
+.................... 		buffer_index++; /* increment the buffer index */ 
+00EF:  INCF   48,F
+.................... 		debug_state = 4; 
+00F0:  MOVLW  04
+00F1:  MOVWF  4A
+.................... 		break; 
+00F2:  GOTO   100
+....................  
+.................... 		/* A NACK was received when transmitting data back from the master. */ 
+.................... 		/* Slave logic is reset in this case. R_W=0, D_A=1, and BF=0. */ 
+.................... 		/* If we don't stop in this state, then something is wrong!! */ 
+.................... 	case 0x28: /* 0010 1000 */ 
+.................... 		debug_state = 5; 
+00F3:  MOVLW  05
+00F4:  MOVWF  4A
+.................... 		break; 
+00F5:  GOTO   100
+....................  
+.................... 		/* Something went wrong!! */ 
+.................... 	default: 
+.................... 		i2c_error(); 
+.................... 		break; 
+*
+00FF:  GOTO   100
+.................... 	} 
+.................... } 
+....................  
+.................... void i2c_error(void) { 
+.................... 	comms_error = 1; 
+*
+00F6:  MOVLW  01
+00F7:  MOVWF  49
+.................... 	printf("I2C ERROR!\r\n"); 
+00F8:  MOVLW  04
+00F9:  BSF    03.6
+00FA:  MOVWF  0D
+00FB:  MOVLW  01
+00FC:  MOVWF  0F
+00FD:  BCF    03.6
+00FE:  CALL   049
+.................... } 
+....................  
+.................... void write_i2c(unsigned char transmit_byte) { 
+*
+0034:  MOVLW  01
+0035:  MOVWF  55
+.................... 	unsigned char write_collision = 1; 
+....................  
+.................... 	while (PIC_SSPSTAT & PIC_SSPSTAT_BIT_BF) /* Is BF bit set in PIC_SSPSTAT? */ 
+.................... 	{ 
+0036:  BSF    03.5
+0037:  BTFSC  14.0
+.................... 		/* If yes, then keep waiting */ 
+.................... 	} 
+0038:  GOTO   037
+....................  
+.................... 	while (write_collision) { 
+0039:  BCF    03.5
+003A:  MOVF   55,F
+003B:  BTFSC  03.2
+003C:  GOTO   047
+.................... 		/* If not, then do the i2c_write. */ 
+.................... 		PIC_SSPCON1 &= ~PIC_SSPCON1_BIT_WCOL; /* Clear the WCOL flag */ 
+003D:  BCF    14.7
+.................... 		PIC_SSPBUF = transmit_byte; 
+003E:  MOVF   54,W
+003F:  MOVWF  13
+....................  
+.................... 		/* Was there a write collision? */ 
+.................... 		if (PIC_SSPCON1 & PIC_SSPCON1_BIT_WCOL) { 
+0040:  BTFSS  14.7
+0041:  GOTO   045
+.................... 			/* Yes there was a write collision. */ 
+.................... 			write_collision = 1; 
+0042:  MOVLW  01
+0043:  MOVWF  55
+.................... 		} else { 
+0044:  GOTO   046
+.................... 			/* NO, there was no write collision. */ 
+.................... 			/* The transmission was successful */ 
+.................... 			write_collision = 0; 
+0045:  CLRF   55
+.................... 		} 
+.................... 	} 
+0046:  GOTO   03A
+.................... 	PIC_SSPCON1 |= PIC_SSPCON1_BIT_CKP; /* Release the clock. */ 
+0047:  BSF    14.4
+.................... } 
+0048:  RETURN
+....................  
+.................... /* This function returns the byte in SSPBUF */ 
+.................... unsigned char read_i2c(void) { 
+.................... 	return PIC_SSPBUF; 
+*
+0031:  MOVF   13,W
+0032:  MOVWF  78
+.................... } 
+0033:  RETURN
+....................  
+.................... void main(void) { 
+*
+0123:  CLRF   04
+0124:  BCF    03.7
+0125:  MOVLW  1F
+0126:  ANDWF  03,F
+0127:  MOVLW  81
+0128:  BSF    03.5
+0129:  MOVWF  19
+012A:  MOVLW  A6
+012B:  MOVWF  18
+012C:  MOVLW  90
+012D:  BCF    03.5
+012E:  MOVWF  18
+012F:  BSF    03.5
+0130:  BSF    1F.0
+0131:  BSF    1F.1
+0132:  BSF    1F.2
+0133:  BCF    1F.3
+0134:  MOVLW  07
+0135:  MOVWF  1C
+.................... 	debug_state = 0; 
+0136:  BCF    03.5
+0137:  CLRF   4A
+.................... 	i2c_initialize(); 
+0138:  GOTO   118
+.................... 	enable_interrupts(GLOBAL); 
+0139:  MOVLW  C0
+013A:  IORWF  0B,F
+.................... 	printf("i2c slave 09 Jan 2005\n\r\n\r"); 
+013B:  MOVLW  0B
+013C:  BSF    03.6
+013D:  MOVWF  0D
+013E:  MOVLW  01
+013F:  MOVWF  0F
+0140:  BCF    03.6
+0141:  CLRF   27
+0142:  BTFSC  0B.7
+0143:  BSF    27.7
+0144:  BCF    0B.7
+0145:  CALL   049
+0146:  BTFSC  27.7
+0147:  BSF    0B.7
+....................  
+.................... 	while (1) { 
+.................... 		if (debug_state) { 
+0148:  MOVF   4A,F
+0149:  BTFSC  03.2
+014A:  GOTO   14C
+.................... 			// printf ("debug state = %d\r\n", debug_state); 
+.................... 			debug_state = 0; 
+014B:  CLRF   4A
+.................... 		} 
+....................  
+.................... 	} 
+014C:  GOTO   148
+.................... } 
+014D:  SLEEP
+
+Configuration Fuses:
+   Word  1: 3F72   HS NOWDT PUT BROWNOUT NOLVP NOCPD NOWRT NODEBUG NOPROTECT

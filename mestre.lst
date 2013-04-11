@@ -1,0 +1,600 @@
+CCS PCM C Compiler, Version 4.124, 5967               11-abr-13 10:16
+
+               Filename: E:\Eletronica\Projetos\I2C\mestre.lst
+
+               ROM used: 579 words (7%)
+                         Largest free fragment is 2048
+               RAM used: 9 (2%) at main() level
+                         15 (4%) worst case
+               Stack:    3 locations
+
+*
+0000:  MOVLW  01
+0001:  MOVWF  0A
+0002:  GOTO   1AA
+0003:  NOP
+.................... /* 
+....................  * http://www.ccsinfo.com/forum/viewtopic.php?t=21456 
+....................  * 11/04/2013 08:06 
+....................  */ 
+....................  
+.................... #include <16F876A.H> 
+.................... //////// Standard Header file for the PIC16F876A device //////////////// 
+.................... #device PIC16F876A 
+.................... #list 
+....................  
+....................  
+.................... // 10-bit A/D conversion 
+.................... #device ADC=10 
+.................... #fuses HS,NOWDT,NOPROTECT,NOLVP 
+....................  
+.................... #use Delay(Clock=20000000) 
+.................... #use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7,brgh1ok) 
+....................  
+.................... #include <input.c> 
+.................... /////////////////////////////////////////////////////////////////////////// 
+.................... ////        (C) Copyright 1996,2003 Custom Computer Services           //// 
+.................... //// This source code may only be used by licensed users of the CCS C  //// 
+.................... //// compiler.  This source code may only be distributed to other      //// 
+.................... //// licensed users of the CCS C compiler.  No other use, reproduction //// 
+.................... //// or distribution is permitted without written permission.          //// 
+.................... //// Derivative programs created using this software in object code    //// 
+.................... //// form are not restricted in any way.                               //// 
+.................... /////////////////////////////////////////////////////////////////////////// 
+....................  
+....................  
+.................... #include <ctype.h> 
+.................... //////////////////////////////////////////////////////////////////////////// 
+.................... ////        (C) Copyright 1996,2003 Custom Computer Services            //// 
+.................... //// This source code may only be used by licensed users of the CCS C   //// 
+.................... //// compiler.  This source code may only be distributed to other       //// 
+.................... //// licensed users of the CCS C compiler.  No other use, reproduction  //// 
+.................... //// or distribution is permitted without written permission.           //// 
+.................... //// Derivative programs created using this software in object code     //// 
+.................... //// form are not restricted in any way.                                //// 
+.................... //////////////////////////////////////////////////////////////////////////// 
+....................  
+.................... #ifndef _CTYPE 
+.................... #define _CTYPE 
+....................  
+.................... #define islower(x)  isamong(x,"abcdefghijklmnopqrstuvwxyz") 
+.................... #define isupper(x)  isamong(x,"ABCDEFGHIJKLMNOPQRSTUVWXYZ") 
+.................... #define isalnum(x)  isamong(x,"0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") 
+.................... #define isalpha(x)  isamong(x,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") 
+.................... #define isdigit(x)  isamong(x,"0123456789") 
+.................... #define isspace(x)  ((x)==' ') 
+.................... #define isxdigit(x) isamong(x,"0123456789ABCDEFabcdef") 
+.................... #define iscntrl(x)  ((x)<' ') 
+.................... #define isprint(x)  ((x)>=' ') 
+.................... #define isgraph(x)  ((x)>' ') 
+.................... #define ispunct(x)  (((x)>' ')&&!isalnum(x)) 
+....................  
+.................... #endif 
+....................  
+....................  
+....................  
+.................... BYTE gethex1() { 
+....................    char digit; 
+....................  
+....................    digit = getc(); 
+0144:  BTFSS  0C.5
+0145:  GOTO   144
+0146:  MOVF   1A,W
+0147:  MOVWF  28
+....................  
+....................    putc(digit); 
+0148:  MOVF   28,W
+0149:  BTFSS  0C.4
+014A:  GOTO   149
+014B:  MOVWF  19
+....................  
+....................    if(digit<='9') 
+014C:  MOVF   28,W
+014D:  SUBLW  39
+014E:  BTFSS  03.0
+014F:  GOTO   155
+....................      return(digit-'0'); 
+0150:  MOVLW  30
+0151:  SUBWF  28,W
+0152:  MOVWF  78
+0153:  GOTO   165
+....................    else 
+0154:  GOTO   165
+....................      return((toupper(digit)-'A')+10); 
+0155:  MOVF   28,W
+0156:  SUBLW  60
+0157:  BTFSC  03.0
+0158:  GOTO   160
+0159:  MOVF   28,W
+015A:  SUBLW  7A
+015B:  BTFSS  03.0
+015C:  GOTO   160
+015D:  MOVF   28,W
+015E:  ANDLW  DF
+015F:  GOTO   161
+0160:  MOVF   28,W
+0161:  ADDLW  BF
+0162:  ADDLW  0A
+0163:  MOVWF  78
+0164:  GOTO   165
+.................... } 
+0165:  RETURN
+....................  
+.................... BYTE gethex() { 
+....................    unsigned int8 lo,hi; 
+....................  
+....................    hi = gethex1(); 
+0166:  CALL   144
+0167:  MOVF   78,W
+0168:  MOVWF  27
+....................    lo = gethex1(); 
+0169:  CALL   144
+016A:  MOVF   78,W
+016B:  MOVWF  26
+....................    if(lo==0xdd) 
+016C:  MOVF   26,W
+016D:  SUBLW  DD
+016E:  BTFSS  03.2
+016F:  GOTO   174
+....................      return(hi); 
+0170:  MOVF   27,W
+0171:  MOVWF  78
+0172:  GOTO   17C
+....................    else 
+0173:  GOTO   17C
+....................      return( hi*16+lo ); 
+0174:  SWAPF  27,W
+0175:  MOVWF  77
+0176:  MOVLW  F0
+0177:  ANDWF  77,F
+0178:  MOVF   77,W
+0179:  ADDWF  26,W
+017A:  MOVWF  78
+017B:  GOTO   17C
+.................... } 
+017C:  RETURN
+....................  
+.................... void get_string(char* s, unsigned int8 max) { 
+....................    unsigned int8 len; 
+....................    char c; 
+....................  
+....................    --max; 
+....................    len=0; 
+....................    do { 
+....................      c=getc(); 
+....................      if(c==8) {  // Backspace 
+....................         if(len>0) { 
+....................           len--; 
+....................           putc(c); 
+....................           putc(' '); 
+....................           putc(c); 
+....................         } 
+....................      } else if ((c>=' ')&&(c<='~')) 
+....................        if(len<=max) { 
+....................          s[len++]=c; 
+....................          putc(c); 
+....................        } 
+....................    } while(c!=13); 
+....................    s[len]=0; 
+.................... } 
+....................  
+.................... // stdlib.h is required for the ato_ conversions 
+.................... // in the following functions 
+.................... #ifdef _STDLIB 
+.................... #if !defined(__PCD__) 
+.................... signed int8 get_int() { 
+....................   char s[5]; 
+....................   signed int8 i; 
+....................  
+....................   get_string(s, 5); 
+....................  
+....................   i=atoi(s); 
+....................   return(i); 
+.................... } 
+.................... #endif 
+....................  
+.................... #if defined(__PCD__) 
+.................... signed int16 get_int() { 
+....................   char s[5]; 
+....................   signed int16 i; 
+....................  
+....................   get_string(s, 7); 
+....................  
+....................   i=atoi(s); 
+....................   return(i); 
+.................... } 
+.................... #endif 
+....................  
+.................... #if !defined(__PCD__) 
+.................... signed int16 get_long() { 
+....................   char s[7]; 
+....................   signed int16 l; 
+....................  
+....................   get_string(s, 7); 
+....................   l=atol(s); 
+....................   return(l); 
+.................... } 
+.................... #endif 
+....................  
+.................... #if defined(__PCD__) 
+.................... signed int32 get_long() { 
+....................   char s[7]; 
+....................   signed int32 l; 
+....................  
+....................   get_string(s, 10); 
+....................   l=atoi32(s); 
+....................   return(l); 
+.................... } 
+.................... #endif 
+....................  
+.................... float get_float() { 
+....................   char s[20]; 
+....................   float f; 
+....................  
+....................   get_string(s, 20); 
+....................   f = atof(s); 
+....................   return(f); 
+.................... } 
+....................  
+.................... #endif 
+....................  
+....................  
+.................... #define EEPROM_SDA  PIN_C4 
+.................... #define EEPROM_SCL  PIN_C3 
+.................... #define SLAVE_ADDRESS 0x02 
+....................  
+.................... #use i2c(master, sda=EEPROM_SDA, scl=EEPROM_SCL, FORCE_HW) 
+*
+0088:  BCF    14.7
+0089:  BCF    0C.3
+008A:  MOVF   28,W
+008B:  MOVWF  13
+008C:  MOVLW  02
+008D:  BTFSC  14.7
+008E:  GOTO   096
+008F:  BTFSS  0C.3
+0090:  GOTO   08F
+0091:  MOVLW  00
+0092:  BSF    03.5
+0093:  BTFSC  11.6
+0094:  MOVLW  01
+0095:  BCF    03.5
+0096:  MOVWF  78
+0097:  RETURN
+0098:  BCF    14.6
+0099:  BSF    03.5
+009A:  BSF    11.3
+009B:  BTFSC  11.3
+009C:  GOTO   09B
+009D:  BTFSC  77.0
+009E:  BCF    11.5
+009F:  BTFSS  77.0
+00A0:  BSF    11.5
+00A1:  BSF    11.4
+00A2:  BTFSC  11.4
+00A3:  GOTO   0A2
+00A4:  BCF    03.5
+00A5:  MOVF   13,W
+00A6:  MOVWF  78
+00A7:  RETURN
+....................  
+.................... void initI2C() { 
+.................... 	output_float(EEPROM_SCL); 
+*
+002E:  BSF    20.3
+002F:  MOVF   20,W
+0030:  BSF    03.5
+0031:  MOVWF  07
+.................... 	output_float(EEPROM_SDA); 
+0032:  BCF    03.5
+0033:  BSF    20.4
+0034:  MOVF   20,W
+0035:  BSF    03.5
+0036:  MOVWF  07
+.................... } 
+0037:  BCF    03.5
+0038:  BCF    0A.3
+0039:  BCF    0A.4
+003A:  GOTO   1D1 (RETURN)
+....................  
+.................... void writeI2C(INT16 word) { 
+.................... 	i2c_start(); 
+*
+018C:  BSF    03.5
+018D:  BSF    11.0
+018E:  BTFSC  11.0
+018F:  GOTO   18E
+.................... 	//delay_ms(1); 
+.................... 	i2c_write(SLAVE_ADDRESS); /* Device Address */ 
+0190:  MOVLW  02
+0191:  BCF    03.5
+0192:  MOVWF  28
+0193:  CALL   088
+.................... 	//delay_ms(1); 
+.................... 	i2c_write(word & 0x00ff); 
+0194:  MOVF   24,W
+0195:  MOVWF  26
+0196:  CLRF   27
+0197:  MOVF   24,W
+0198:  MOVWF  28
+0199:  CALL   088
+.................... 	//delay_ms(1); 
+.................... 	i2c_write((word & 0xff00) >> 8); 
+019A:  CLRF   26
+019B:  MOVF   25,W
+019C:  MOVWF  27
+019D:  MOVWF  26
+019E:  CLRF   27
+019F:  MOVF   26,W
+01A0:  MOVWF  28
+01A1:  CALL   088
+.................... 	//delay_ms(1); 
+.................... 	i2c_stop(); 
+01A2:  BSF    03.5
+01A3:  BSF    11.2
+01A4:  BTFSC  11.2
+01A5:  GOTO   1A4
+.................... } 
+01A6:  BCF    03.5
+01A7:  BCF    0A.3
+01A8:  BCF    0A.4
+01A9:  GOTO   241 (RETURN)
+....................  
+.................... INT16 readI2C() { 
+*
+00A8:  CLRF   24
+00A9:  CLRF   25
+.................... 	BYTE b1 = 0, b2 = 0; 
+.................... 	i2c_start();   // restart condition 
+00AA:  BSF    03.5
+00AB:  BSF    11.0
+00AC:  BTFSC  11.0
+00AD:  GOTO   0AC
+.................... 	i2c_write(SLAVE_ADDRESS + 1); 
+00AE:  MOVLW  03
+00AF:  BCF    03.5
+00B0:  MOVWF  28
+00B1:  CALL   088
+.................... 	b1 = i2c_read(1); 
+00B2:  MOVLW  01
+00B3:  MOVWF  77
+00B4:  CALL   098
+00B5:  MOVF   78,W
+00B6:  MOVWF  24
+.................... 	//delay_ms(1); 
+.................... 	b2 = i2c_read(0); 
+00B7:  CLRF   77
+00B8:  CALL   098
+00B9:  MOVF   78,W
+00BA:  MOVWF  25
+.................... 	//delay_ms(1); 
+.................... 	i2c_stop(); 
+00BB:  BSF    03.5
+00BC:  BSF    11.2
+00BD:  BTFSC  11.2
+00BE:  GOTO   0BD
+.................... 	return make16(b2, b1); 
+00BF:  BCF    03.5
+00C0:  MOVF   25,W
+00C1:  MOVWF  7A
+00C2:  MOVF   24,W
+00C3:  MOVWF  78
+00C4:  MOVF   25,W
+00C5:  MOVWF  79
+.................... } 
+00C6:  BCF    0A.3
+00C7:  BCF    0A.4
+00C8:  GOTO   203 (RETURN)
+....................  
+.................... INT16 gethexword() { 
+.................... 	BYTE lo, hi; 
+....................  
+.................... 	hi = gethex(); 
+*
+017D:  CALL   166
+017E:  MOVF   78,W
+017F:  MOVWF  25
+.................... 	lo = gethex(); 
+0180:  CALL   166
+0181:  MOVF   78,W
+0182:  MOVWF  24
+....................  
+.................... 	return make16(hi, lo); 
+0183:  MOVF   25,W
+0184:  MOVWF  7A
+0185:  MOVF   24,W
+0186:  MOVWF  78
+0187:  MOVF   25,W
+0188:  MOVWF  79
+.................... } 
+0189:  BCF    0A.3
+018A:  BCF    0A.4
+018B:  GOTO   230 (RETURN)
+....................  
+.................... void main() { 
+*
+01AA:  CLRF   04
+01AB:  BCF    03.7
+01AC:  MOVLW  1F
+01AD:  ANDWF  03,F
+01AE:  MOVLW  81
+01AF:  BSF    03.5
+01B0:  MOVWF  19
+01B1:  MOVLW  A6
+01B2:  MOVWF  18
+01B3:  MOVLW  90
+01B4:  BCF    03.5
+01B5:  MOVWF  18
+01B6:  MOVLW  FF
+01B7:  MOVWF  20
+01B8:  BSF    20.3
+01B9:  MOVF   20,W
+01BA:  BSF    03.5
+01BB:  MOVWF  07
+01BC:  BCF    03.5
+01BD:  BSF    20.4
+01BE:  MOVF   20,W
+01BF:  BSF    03.5
+01C0:  MOVWF  07
+01C1:  MOVLW  31
+01C2:  MOVWF  13
+01C3:  MOVLW  28
+01C4:  BCF    03.5
+01C5:  MOVWF  14
+01C6:  BSF    03.5
+01C7:  BSF    14.7
+01C8:  BCF    14.6
+01C9:  BSF    1F.0
+01CA:  BSF    1F.1
+01CB:  BSF    1F.2
+01CC:  BCF    1F.3
+01CD:  MOVLW  07
+01CE:  MOVWF  1C
+....................  
+.................... 	int cmd; 
+.................... 	INT16 value; 
+....................  
+.................... 	initI2C(); 
+01CF:  BCF    03.5
+01D0:  GOTO   02E
+....................  
+.................... 	printf("i2c master 09 Jan 2005\n\r\n\r"); 
+01D1:  MOVLW  04
+01D2:  BSF    03.6
+01D3:  MOVWF  0D
+01D4:  MOVLW  00
+01D5:  MOVWF  0F
+01D6:  BCF    03.6
+01D7:  CALL   03B
+....................  
+.................... 	do { 
+.................... 		do { 
+.................... 			printf("\r\nRead or Write: "); 
+01D8:  MOVLW  12
+01D9:  BSF    03.6
+01DA:  MOVWF  0D
+01DB:  MOVLW  00
+01DC:  MOVWF  0F
+01DD:  BCF    03.6
+01DE:  CALL   03B
+.................... 			cmd = getc(); 
+01DF:  BTFSS  0C.5
+01E0:  GOTO   1DF
+01E1:  MOVF   1A,W
+01E2:  MOVWF  21
+.................... 			cmd = toupper(cmd); 
+01E3:  MOVF   21,W
+01E4:  SUBLW  60
+01E5:  BTFSC  03.0
+01E6:  GOTO   1EE
+01E7:  MOVF   21,W
+01E8:  SUBLW  7A
+01E9:  BTFSS  03.0
+01EA:  GOTO   1EE
+01EB:  MOVF   21,W
+01EC:  ANDLW  DF
+01ED:  GOTO   1EF
+01EE:  MOVF   21,W
+01EF:  MOVWF  21
+.................... 			putc(cmd); 
+01F0:  MOVF   21,W
+01F1:  BTFSS  0C.4
+01F2:  GOTO   1F1
+01F3:  MOVWF  19
+.................... 		} while ((cmd != 'R') && (cmd != 'W')); 
+01F4:  MOVF   21,W
+01F5:  SUBLW  52
+01F6:  BTFSC  03.2
+01F7:  GOTO   1FC
+01F8:  MOVF   21,W
+01F9:  SUBLW  57
+01FA:  BTFSS  03.2
+01FB:  GOTO   1D8
+....................  
+.................... 		if (cmd == 'R') { 
+01FC:  MOVF   21,W
+01FD:  SUBLW  52
+01FE:  BTFSS  03.2
+01FF:  GOTO   224
+.................... 			value = 0; 
+0200:  CLRF   23
+0201:  CLRF   22
+.................... 			value = readI2C(); 
+0202:  GOTO   0A8
+0203:  MOVF   79,W
+0204:  MOVWF  23
+0205:  MOVF   78,W
+0206:  MOVWF  22
+.................... 			printf("\r\nValue: %lX\r\n", value); 
+0207:  MOVLW  1B
+0208:  BSF    03.6
+0209:  MOVWF  0D
+020A:  MOVLW  00
+020B:  MOVWF  0F
+020C:  BCF    03.0
+020D:  MOVLW  09
+020E:  BCF    03.6
+020F:  MOVWF  24
+0210:  GOTO   0C9
+0211:  MOVF   23,W
+0212:  MOVWF  24
+0213:  MOVLW  37
+0214:  MOVWF  25
+0215:  CALL   121
+0216:  MOVF   22,W
+0217:  MOVWF  24
+0218:  MOVLW  37
+0219:  MOVWF  25
+021A:  CALL   121
+021B:  MOVLW  0D
+021C:  BTFSS  0C.4
+021D:  GOTO   21C
+021E:  MOVWF  19
+021F:  MOVLW  0A
+0220:  BTFSS  0C.4
+0221:  GOTO   220
+0222:  MOVWF  19
+.................... 		} else if (cmd == 'W') { 
+0223:  GOTO   241
+0224:  MOVF   21,W
+0225:  SUBLW  57
+0226:  BTFSS  03.2
+0227:  GOTO   241
+.................... 			printf("\r\nNew 16-bit value: "); 
+0228:  MOVLW  23
+0229:  BSF    03.6
+022A:  MOVWF  0D
+022B:  MOVLW  00
+022C:  MOVWF  0F
+022D:  BCF    03.6
+022E:  CALL   03B
+.................... 			value = gethexword(); 
+022F:  GOTO   17D
+0230:  MOVF   79,W
+0231:  MOVWF  23
+0232:  MOVF   78,W
+0233:  MOVWF  22
+.................... 			printf("\n\r"); 
+0234:  MOVLW  0A
+0235:  BTFSS  0C.4
+0236:  GOTO   235
+0237:  MOVWF  19
+0238:  MOVLW  0D
+0239:  BTFSS  0C.4
+023A:  GOTO   239
+023B:  MOVWF  19
+.................... 			writeI2C(value); 
+023C:  MOVF   23,W
+023D:  MOVWF  25
+023E:  MOVF   22,W
+023F:  MOVWF  24
+0240:  GOTO   18C
+.................... 		} 
+....................  
+.................... 	} while (TRUE); 
+.................... } 
+0241:  GOTO   1D8
+0242:  SLEEP
+
+Configuration Fuses:
+   Word  1: 3F72   HS NOWDT PUT BROWNOUT NOLVP NOCPD NOWRT NODEBUG NOPROTECT
