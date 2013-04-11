@@ -1,136 +1,90 @@
 /*
- * mestre.c
- *
- *  Created on: 22/10/2012
- *      Author: cuki
+ * http://www.ccsinfo.com/forum/viewtopic.php?t=21456
+ * 11/04/2013 08:06
  */
 
-#include <18F252.h>
+#include <16F876A.H>
 
-#fuses	H4,NOOSCSEN,NOPUT,NOBROWNOUT,NOWDT,NOSTVREN,NOLVP
-#fuses	NODEBUG,NOPROTECT,NOCPB,NOCPD,NOWRT,NOWRTC,NOWRTB
-#fuses	NOWRTD,NOEBTR,NOEBTRB
+// 10-bit A/D conversion
+#device ADC=10
+#fuses HS,NOWDT,NOPROTECT,NOLVP
 
-#use delay(clock=32MHz, crystal=8MHz)
-#use rs232(xmit=pin_c6, rcv=pin_c7, baud=9600, parity=E, stop=1)
-#use i2c(master, scl=pin_c3, sda=pin_c4, fast=1000000, force_hw)
+#use Delay(Clock=20000000)
+#use rs232(baud=9600,xmit=PIN_C6,rcv=PIN_C7,brgh1ok)
 
-#define addr_device 0xB0
-#define memory_addr 0x01
-#define data_addr	0x55
-#define debounce	500
+#include <input.c>
 
-static int ext1, ext2;
+#define EEPROM_SDA  PIN_C4
+#define EEPROM_SCL  PIN_C3
+#define SLAVE_ADDRESS 0x02
 
-#INT_EXT1
-void isr_ext1() {
-	clear_interrupt(INT_EXT1);
-	ext1 = 1;
+#use i2c(master, sda=EEPROM_SDA, scl=EEPROM_SCL, FORCE_HW)
+
+void initI2C() {
+	output_float(EEPROM_SCL);
+	output_float(EEPROM_SDA);
 }
 
-#INT_EXT2
-void isr_ext2() {
-	clear_interrupt(INT_EXT2);
-	ext2 = 1;
-}
-
-short handshake(int addr) {
-	short ack = 1;
+void writeI2C(INT16 word) {
 	i2c_start();
-	ack = i2c_write(addr);
+	//delay_ms(1);
+	i2c_write(SLAVE_ADDRESS); /* Device Address */
+	//delay_ms(1);
+	i2c_write(word & 0x00ff);
+	//delay_ms(1);
+	i2c_write((word & 0xff00) >> 8);
+	//delay_ms(1);
 	i2c_stop();
-	return ack;
 }
 
-int send_i2c(int addr, int mem, int data, int data2) {
-	if (handshake(addr))
-		return 0xFF;
-	else {
-		i2c_start();
-		i2c_write(addr);
-		i2c_write(mem);
-		i2c_write(data);
-		i2c_write(data2);
-		i2c_stop();
-		return 0;
-	}
+INT16 readI2C() {
+	BYTE b1 = 0, b2 = 0;
+	i2c_start();   // restart condition
+	i2c_write(SLAVE_ADDRESS + 1);
+	b1 = i2c_read(1);
+	//delay_ms(1);
+	b2 = i2c_read(0);
+	//delay_ms(1);
+	i2c_stop();
+	return make16(b2, b1);
 }
 
-int read_i2c(int addr, int data) {
-	int retorno = 0;
-	if (handshake(addr))
-		return 0xFF;
-	else {
-		i2c_start();
-		i2c_write(addr);
-		i2c_write(data);
-		i2c_start();
-		i2c_write(addr + 1);
-		retorno = i2c_read(0);
-		i2c_stop();
-		return retorno;
-	}
+INT16 gethexword() {
+	BYTE lo, hi;
+
+	hi = gethex();
+	lo = gethex();
+
+	return make16(hi, lo);
 }
 
-int main(void) {
+void main() {
 
-	port_b_pullups(true);
-	enable_interrupts(INT_EXT1_H2L);
-	enable_interrupts(INT_EXT2_H2L);
-	enable_interrupts(GLOBAL);
-	delay_ms(500);
+	int cmd;
+	INT16 value;
 
-	while (true) {
-		printf("\fCheck <- ext1\n\rSend  <- ext2\n\r");
-		if (ext1) {
-			ext1 = 0;
-			int ack = 0;
-			printf("ext1");
-			delay_ms(debounce);
-			printf("\fIniciando 0x%X", addr_device);
-			do {
-				ack = handshake(addr_device);
-				if (ack) {
-					printf("\n\rNao repondendo");
-				} else
-					printf("\n\rOk");
-				delay_ms(1000);
-			} while (ack && !ext1);
-			ext1 = 0;
-		} else if (ext2) {
-			ext2 = 0;
-			printf("ext1");
-			delay_ms(debounce);
-			printf("\fEscrevendo 0x%X\nem 0x%X 0xAA", data_addr, memory_addr);
-			int aux = send_i2c(addr_device, memory_addr, data_addr, 0xAA);
-//			printf("  %s", (aux == 0xFF) ? "Err" : "Ok");
-			if (aux == 0xFF)
-				printf(" Err");
-			else
-				printf(" Ok");
+	initI2C();
+
+	printf("i2c master 09 Jan 2005\n\r\n\r");
+
+	do {
+		do {
+			printf("\r\nRead or Write: ");
+			cmd = getc();
+			cmd = toupper(cmd);
+			putc(cmd);
+		} while ((cmd != 'R') && (cmd != 'W'));
+
+		if (cmd == 'R') {
+			value = 0;
+			value = readI2C();
+			printf("\r\nValue: %lX\r\n", value);
+		} else if (cmd == 'W') {
+			printf("\r\nNew 16-bit value: ");
+			value = gethexword();
+			printf("\n\r");
+			writeI2C(value);
 		}
-		delay_ms(1000);
-	}
-	return 0;
+
+	} while (TRUE);
 }
-
-/*		switch (cont++) {
- case 0:
-
- break;
- case 1:
- aux = 0;
- printf("\fEnviando 0x%X\nem 0x%X :", data_addr, memory_addr);
- aux = send_i2c(addr_device, memory_addr, data_addr);
- printf("\n%s", aux == 0xFF ? "Error" : "Ok");
- break;
- case 2:
- aux = 0;
- printf("\fLendo em 0x%X", memory_addr);
- aux = read_i2c(addr_device, memory_addr);
- printf("\nleitura: 0x%X", aux);
- break;
- default:
- cont = 0;
- break;
- }*/
